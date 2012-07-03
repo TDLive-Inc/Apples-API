@@ -321,6 +321,24 @@ class TDLive_General_Utils {
 }
 class HelloWorldApp
 {
+	private function cardsdb(){
+		return array("cards" => array("Cheese", "Raffles"), "descs" => array("Spray-can deliciousness.", '"Place a ticket here to win a fabulous prize!" Yeah, right.'));
+	}
+	private function checkToken($ip, $user, $token){
+		if(! $tokencontents=file_get_contents($ip . ".token")){
+			return false;
+		}
+		explode($tokencontents, "/");
+		if(! $tokencontents[0] == $token){
+			return false;
+		}
+		elseif(! $tokencontents[1] == $user){
+			return false;
+		}
+		else{
+			return true;
+		}
+	}
 	public function put($code, $json){
 		return array(
 			$code,
@@ -340,10 +358,61 @@ class HelloWorldApp
 				echo "Requested alive state. Returned a 200 OK.\n";
 				$return=$this->put(200, array("alive" => "true"));
 			}
+			if($path[2] == "token"){
+				echo "Wants token. ";
+				$ip=$env['REMOTE_ADDR'];
+				if(! @isset($path[3])){
+					echo "No username! Returned a 400 Bad Request.\n";
+					return $this->put(400, array("error" => "user"));
+				}
+				if(file_exists($ip . ".token")) {
+					echo "Token was issued. Returned 400 Bad Request.\n";
+					return $this->put(400, array("error" => "alreadyissued"));
+				}
+				$letters=array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+				$token="";
+				$n=0;
+				while($n < 30){
+					$letteradd=$letters[rand(0, 35)];
+					$token=$token . $letteradd;
+					$n++;
+				}
+				file_put_contents($ip . ".token", $token . "/" . $path[3]);
+				echo "Returned token " . $token . "\n";
+				$return=$this->put(200, array("token" => $token));
+			}
+			elseif($path[2] == "card"){
+				echo "Requested a new card. ";
+				$cards=$this->cardsdb();
+				$card=rand(0, count($cards['cards'])-1);
+				$json=array("card" => $cards['cards'][$card], "desc" => $cards['descs'][$card], "id" => $card);
+				echo $json["card"] . " issued.";
+				$return=$this->put(200, $json);
+			}
+			elseif($path[2] == "playcard"){
+				echo "Trying to play a card.";
+				if(! @isset($path[3])){
+					echo "Request denied. No token specified.\n";
+					return $this->put(400, array("error" => "notoken"));
+				}
+				elseif(! @isset($path[5])){
+					echo "Request denied. No card specified.\n";
+					return $this->put(400, array("error" => "nocard"));
+				}
+				elseif(! @isset($path[4])){
+					echo "Request denied. No user name specified.\n";
+					return $this->put(400, array("error" => "nouser"));
+				}
+				if(! $this->checkToken($env["REMOTE_ADDR"], $path[3], $path[4])){
+					echo "Request denied. Invalid combo.\n";
+					return $this->put(400, array("error" => "invalidtoken"));
+				}
+				$cards=$this->cardsdb();
+			}	
 			else{
 			echo "Invalid call. Returned a 400 Bad Request.\n";
 			$return=$this->put(400, array("error" => "invalid_call"));
-			}	
+			}
 		}
 		else{
 			echo "Home page call. Returning a 200 OK.\n";
