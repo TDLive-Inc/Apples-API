@@ -350,7 +350,7 @@ class HelloWorldApp
 	{
 		/*$genutils=new TDLive_General_Utils;
 		$varget=$genutils->determinateGETvars($env['QUERY_STRING']); */
-		echo "Accepted connection from " . $env["REMOTE_ADDR"] . ". ";
+		echo "Accepted connection from " . gethostbyaddr($env["REMOTE_ADDR"]) . ". ";
 		$me=new TDLive_General_Utils;
 		$path=$me->translateuri($env["REQUEST_URI"]);
 		if($path[1] == "call"){
@@ -407,8 +407,25 @@ class HelloWorldApp
 					echo "Request denied. Invalid combo.\n";
 					return $this->put(400, array("error" => "invalidtoken"));
 				}
+				$user=$path[4];
 				$cards=$this->cardsdb();
-			}	
+				if(! @isset($cards[$path[5]])){
+					echo "Request denied. Card doesn't exist.\n";
+					return $this->put(400, array("error" => "carddoesntexist"));
+				}
+				if(! is_dir("judgecards")){
+					if(! mkdir("judgecards")){
+						echo "Request denied. Cannot create judgecards directory.";
+						return $this->put(500, array("error" => "nodircreate"));
+					}
+				}
+				if(file_exists("judgecards/$user")){
+					echo "Request denied. Card already played.";
+					return $this->put(400, array("error" => "alreadyplayed"));
+				}
+				file_put_contents($path[5], "judgecards/$user");
+				return $this->put(200, array("played" => true));
+				}	
 			else{
 			echo "Invalid call. Returned a 400 Bad Request.\n";
 			$return=$this->put(400, array("error" => "invalid_call"));
