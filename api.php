@@ -360,12 +360,12 @@ class HelloWorldApp
 				echo "Wants token. ";
 				$ip=$env['REMOTE_ADDR'];
 				if(! @isset($path[3])){
-					echo "No username! Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "user"));
+					echo "No username! Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "user"));
 				}
 				if(file_exists($ip . ".token")) {
-					echo "Token was issued. Returned 400 Bad Request.\n";
-					return $this->put(400, array("error" => "alreadyissued"));
+					echo "Token was issued. Returned 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "alreadyissued"));
 				}
 				$letters=array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
 				$token="";
@@ -391,25 +391,25 @@ class HelloWorldApp
 				echo "Trying to play a card.";
 				if(! @isset($path[3])){
 					echo "Request denied. No token specified.\n";
-					return $this->put(400, array("error" => "notoken"));
+					return $this->put(406, array("error" => "notoken"));
 				}
 				elseif(! @isset($path[5])){
 					echo "Request denied. No card specified.\n";
-					return $this->put(400, array("error" => "nocard"));
+					return $this->put(406, array("error" => "nocard"));
 				}
 				elseif(! @isset($path[4])){
 					echo "Request denied. No user name specified.\n";
-					return $this->put(400, array("error" => "nouser"));
+					return $this->put(406, array("error" => "nouser"));
 				}
 				if(! $this->checkToken($env["REMOTE_ADDR"], $path[3], $path[4])){
 					echo "Request denied. Invalid combo.\n";
-					return $this->put(400, array("error" => "invalidtoken"));
+					return $this->put(406, array("error" => "invalidtoken"));
 				}
 				$user=$path[4];
 				$cards=$this->cardsdb();
 				if(! @isset($cards[$path[5]])){
 					echo "Request denied. Card doesn't exist.\n";
-					return $this->put(400, array("error" => "carddoesntexist"));
+					return $this->put(406, array("error" => "carddoesntexist"));
 				}
 				if(! is_dir("judgecards")){
 					if(! mkdir("judgecards")){
@@ -419,7 +419,7 @@ class HelloWorldApp
 				}
 				if(file_exists("judgecards/$user")){
 					echo "Request denied. Card already played.";
-					return $this->put(400, array("error" => "alreadyplayed"));
+					return $this->put(406, array("error" => "alreadyplayed"));
 				}
 				file_put_contents($path[5], "judgecards/$user");
 				return $this->put(200, array("played" => true));
@@ -428,8 +428,8 @@ class HelloWorldApp
 				echo "Wants to destroy token. ";
 				$ip=$env['REMOTE_ADDR'];
 				if(! file_exists($ip . ".token")){
-					echo "Request denied. Token doesn't exist. Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "nonexistant"));
+					echo "Request denied. Token doesn't exist. Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "nonexistent"));
 				}
 				elseif(! unlink($ip . ".token")){
 					echo "Request involintarily denied. Could not destroy token. Returned a 500 Internal Server Error.\n";
@@ -443,20 +443,20 @@ class HelloWorldApp
 			elseif($path[2] == "chat"){
 				echo "Wants to submit chat message. ";
 				if(! @isset($path[3])){
-					echo "Request denied. Token not supplied. Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "notoken"));
+					echo "Request denied. Token not supplied. Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "notoken"));
 				}
 				elseif(! @isset($path[4])){
-					echo "Request denied. User not supplied. Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "nouser"));
+					echo "Request denied. User not supplied. Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "nouser"));
 				}
 				elseif(! @isset($path[5])){
-					echo "Request denied. Message not supplied. Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "nomsg"));
+					echo "Request denied. Message not supplied. Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "nomsg"));
 				}
 				elseif(! $this->checkToken($env['REMOTE_ADDR'], $path[4], $path[3])){
-					echo "Request denied. Invalid token supplied. Returned a 400 Bad Request.\n";
-					return $this->put(400, array("error" => "invalidtoken"));
+					echo "Request denied. Invalid token supplied. Returned a 406 Not Acceptable.\n";
+					return $this->put(406, array("error" => "invalidtoken"));
 				}
 				$time=date("g:i A");
 				$formatted=str_replace("%20", " ", $path[5]);
@@ -486,8 +486,8 @@ class HelloWorldApp
 				}
 			}
 			else{
-			echo "Invalid call. Returned a 400 Bad Request.\n";
-			$return=$this->put(400, array("error" => "invalid_call"));
+			echo "Invalid call. Returned a 406 Not Acceptable.\n";
+			$return=$this->put(406, array("error" => "invalid_call"));
 			}
 		}
 		else{
